@@ -60,9 +60,11 @@ class Tuner:
                     self.apply_tuning(section)
                 elif work == "benchmark":
                     if not common.check_ceph_running( user, controller ):
+                        common.printout("LOG","not ceph runing")
+                        exit()
                         run_deploy.main(['restart'])
                     common.printout("LOG","start to run performance test")
-                    self.apply_tuning(section)
+                    #self.apply_tuning(section)
                     time.sleep(3)
                     run_cases.main(['--tuning', section])
                 else:
@@ -139,7 +141,7 @@ class Tuner:
         user = self.cluster["user"]
         osds = self.cluster["osds"]
 
-        stdout, stderr = common.pdsh(user, osds, 'path=`find /var/run/ceph -name "*osd*asok" | head -1`; timeout 5 ceph --admin-daemon $path config show', option="check_return")
+        stdout, stderr = common.pdsh(user, osds, 'path=`find /var/run/ceph -name "*osd*asok" | head -1`; /usr/bin/timeout 5 ceph --admin-daemon $path config show', option="check_return")
         res = common.format_pdsh_return(stdout)
         # merge config diff
         osd_config = common.MergableDict()
@@ -151,7 +153,7 @@ class Tuner:
         user = self.cluster["user"]
         mons = self.cluster["mons"]
 
-        stdout, stderr = common.pdsh(user, mons, 'path=`find /var/run/ceph -name "*mon*asok" | head -1`; timeout 5 ceph --admin-daemon $path config show', option="check_return")
+        stdout, stderr = common.pdsh(user, mons, 'path=`find /var/run/ceph -name "*mon*asok" | head -1`; /usr/bin/timeout 5 ceph --admin-daemon $path config show', option="check_return")
         res = common.format_pdsh_return(stdout)
         mon_config = common.MergableDict()
         for node in res:
@@ -162,7 +164,7 @@ class Tuner:
         user = self.cluster["user"]
         controller = self.cluster["head"]
 
-        stdout, stderr = common.pdsh(user, [controller], 'timeout 5 ceph osd dump | grep pool', option="check_return")
+        stdout, stderr = common.pdsh(user, [controller], '/usr/bin/timeout 5 ceph osd dump | grep pool', option="check_return")
         res = common.format_pdsh_return(stdout)
         pool_config = {}
         for node in res:
