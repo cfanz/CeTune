@@ -70,7 +70,7 @@ class Visualizer:
 
         # Copy local result to remote dir
         common.printout("LOG","Session result generated, copy to remote")
-        common.bash("scp -r %s %s" % (self.path, self.dest_dir_remote_bak))
+        common.bash("scp -P57891 -r %s %s" % (self.path, self.dest_dir_remote_bak))
 
         remote_bak, remote_dir = self.dest_dir_remote_bak.split(':')
         output = self.generate_history_view(remote_bak, remote_dir, self.user)
