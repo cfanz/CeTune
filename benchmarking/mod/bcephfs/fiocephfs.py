@@ -160,3 +160,4 @@ class FioCephFS(Benchmark):
             "instance_number":p[0], "volume_size":p[1], "iopattern":p[2],
             "block_size":p[3], "qd":p[4], "rampup":p[5], 
             "runtime":p[6], "vdisk":p[7]}
+        return testcase_dict
