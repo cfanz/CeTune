@@ -10,7 +10,7 @@ class FioCephFS(Benchmark):
     def prepare_result_dir(self):
         #1. prepare result dir
         self.get_runid()
-        self.benchmark["section_name"] = "%s-%s-qd%s-%s-%s-%s-fiocephfs" % (self.benchmark["iopattern"], self.benchmark["block_size"], self.benchmark["qd"], self.benchmark["volume_size"],self.benchmark["rampup"], self.benchmark["runtime"])
+        self.benchmark["section_name"] = "driver-%s-%s-qd%s-%s-%s-%s-fiocephfs" % (self.benchmark["iopattern"], self.benchmark["block_size"], self.benchmark["qd"], self.benchmark["volume_size"],self.benchmark["rampup"], self.benchmark["runtime"])
         self.benchmark["dirname"] = "%s-%s-%s" % (str(self.runid), str(self.benchmark["instance_number"]), self.benchmark["section_name"])
         self.cluster["dest_dir"] = "/%s/%s" % (self.cluster["dest_dir"], self.benchmark["dirname"])
 	
@@ -27,10 +27,10 @@ class FioCephFS(Benchmark):
 	fio_dir = self.cluster["fiocephfs_dir"]
         common.pdsh(user, nodes, "%s/fio -v" % fio_dir )
         res = common.pdsh(user, nodes, "%s/fio -enghelp | grep cephfs" % fio_dir, option = "check_return")
-        if res and not res[0]:
-            common.printout("ERROR","FIO cephfs engine not installed")
-	    print "You can get the source code of fiocephfs from: https://github.com/noahdesu/fio.git"
-            sys.exit()
+        #if res and not res[0]:
+        #    common.printout("ERROR","FIO cephfs engine not installed")
+	    #    print "You can get the source code of fiocephfs from: https://github.com/noahdesu/fio.git"
+        #    sys.exit()
      
     def run(self):
         super(self.__class__, self).run() 
@@ -42,7 +42,7 @@ class FioCephFS(Benchmark):
         nodes = self.benchmark["distribution"].keys()
         for client in self.benchmark["distribution"]:
 	    max_instance_num = self.benchmark["distribution"][client][-1]
-            res = common.pdsh(user, [client], "for job_num in `seq 0 %d`; do %s/fio --output %s/`hostname`_${job_num}_fio.txt --write_bw_log=%s/`hostname`_${job_num}_fio --write_lat_log=%s/`hostname`_${job_num}_fio --write_iops_log=%s/`hostname`_${job_num}_fio --section %s --filename=`hostname`.${job_num} %s/fio.conf 2>%s/`hostname`_${job_num}_fio_errorlog.txt & done" % (max_instance_num, fio_dir, dest_dir, dest_dir, dest_dir, dest_dir, self.benchmark["section_name"], dest_dir, dest_dir, ), option = "force")         
+            res = common.pdsh(user, [client], "for job_num in `seq 1 %d`; do %s/fio --output %s/`hostname`_${job_num}_fio.txt --write_bw_log=%s/`hostname`_${job_num}_fio --write_lat_log=%s/`hostname`_${job_num}_fio --write_iops_log=%s/`hostname`_${job_num}_fio  --filename=`hostname`.${job_num} %s/fio.conf 2>%s/`hostname`_${job_num}_fio_errorlog.txt & done" % (max_instance_num, fio_dir, dest_dir, dest_dir, dest_dir, dest_dir, dest_dir, dest_dir, ), option = "force")         
             time.sleep(1)
             res = common.pdsh(user, [client], "pgrep fio", option = "check_return")
             if res and not len(res[0].split('\n')) >= len(self.benchmark["distribution"][client]):
@@ -95,6 +95,9 @@ class FioCephFS(Benchmark):
 
     def generate_benchmark_cases(self):
         engine = self.all_conf_data.get_list('benchmark_engine')
+        fio_total_size = self.all_conf_data.get('fio_total_size')
+        fio_dest_dir = self.all_conf_data.get('fio_dest_dir')
+        fio_engine = self.all_conf_data.get('fio_engine')
         if "fiocephfs" not in engine:
             return [[],[]]
         test_config = OrderedDict()
@@ -115,6 +118,8 @@ class FioCephFS(Benchmark):
         fio_list.append("[global]")
         fio_list.append("    direct=1")
         fio_list.append("    time_based")
+        fio_list.append("    ioengine=%s" % fio_engine)
+        fio_list.append("    filename=%s" % fio_dest_dir) 
         for element in itertools.product(test_config["engine"], test_config["io_pattern"], test_config["record_size"], test_config["queue_depth"], test_config["rbd_volume_size"], test_config["warmup_time"], test_config["runtime"], test_config["disk"]):
             engine, io_pattern, record_size, queue_depth, rbd_volume_size, warmup_time, runtime, disk = element
             fio_template = []
@@ -127,6 +132,7 @@ class FioCephFS(Benchmark):
             fio_template.append("    size=%s" % record_size)
             fio_template.append("    ioengine=cephfs")
             fio_template.append("    thread")
+            fio_template.append("    size=%s" % fio_total_size)
             if io_pattern in ["randread", "randwrite", "randrw"]:
                 fio_template.append("    iodepth_batch_submit=1")
                 fio_template.append("    iodepth_batch_complete=1")
@@ -142,6 +148,10 @@ class FioCephFS(Benchmark):
                 except:
                     pass
             fio_list.extend(fio_template)
+        with open("../conf/fio.conf","w") as f:
+            for item in fio_list:
+                f.write(item)
+                f.write("\n")
         return [testcase_list, fio_list]
 
     def parse_benchmark_cases(self, testcase):
