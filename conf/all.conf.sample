@@ -82,3 +82,4 @@ cosbench_objects=r(1,100)
 public_network=10.10.5.0/24
 cluster_network=10.10.5.0/24
 mon_data=/var/lib/ceph/ceph.$id
+ss
