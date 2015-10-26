@@ -133,7 +133,7 @@ def pdsh(user, nodes, command, option="error_check", except_returncode=0, nodie=
     for node in nodes:
         _nodes.append("%s@%s" % (user, node))
     _nodes = ",".join(_nodes)
-    args = ['pdsh', '-R', 'exec', '-w', _nodes, 'ssh', '%h', '-oConnectTimeout=15', command]
+    args = ['pdsh', '-R', 'exec', '-w', _nodes, 'ssh', '-p57891', '%h', '-oConnectTimeout=15', command]
     printout("CONSOLE", args, screen=False)
 
     _subp = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -218,7 +218,7 @@ def bash(command, force=False, option="", nodie=False):
     return stdout
 
 def scp(user, node, localfile, remotefile):
-    args = ['scp', '-oConnectTimeout=15', '-r',localfile, '%s@%s:%s' % (user, node, remotefile)]
+    args = ['scp', '-P57891', '-oConnectTimeout=15', '-r',localfile, '%s@%s:%s' % (user, node, remotefile)]
     printout("CONSOLE", args, screen=False)
     #print('scp: %s' % args)
     stdout, stderr = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True).communicate()
@@ -228,7 +228,7 @@ def scp(user, node, localfile, remotefile):
         printout("ERROR",stderr+"\n")
 
 def rscp(user, node, localfile, remotefile):
-    args = ['scp', '-oConnectTimeout=15', '-r', '%s@%s:%s' % (user, node, remotefile), localfile]
+    args = ['scp', '-P57891', '-oConnectTimeout=15', '-r', '%s@%s:%s' % (user, node, remotefile), localfile]
     printout("CONSOLE", args, screen=False)
     #print('rscp: %s' % args)
     stdout, stderr = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True).communicate()
@@ -238,7 +238,7 @@ def rscp(user, node, localfile, remotefile):
 
 # scp from one remote machine to another remote machine
 def rrscp(user, node1, node1_file, node2,node2_file):
-    args = ['scp', '-oConnectTimeout=15', '-r', '%s@%s:%s'%(user,node1,node1_file)  , '%s@%s:%s' % (user, node2, node2_file)]
+    args = ['scp', '-P57891', '-oConnectTimeout=15', '-r', '%s@%s:%s'%(user,node1,node1_file)  , '%s@%s:%s' % (user, node2, node2_file)]
     #print('scp: %s' % args)
     stdout, stderr = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True).communicate()
     if stderr:
@@ -457,7 +457,7 @@ def add_to_hosts( nodes ):
             bash("echo %s %s >> /etc/hosts" % (str(ip), node))
 
 def check_ceph_running(user, node):
-    stdout, stderr = pdsh(user, [node], "timeout 3 ceph -s 2>/dev/null 1>/dev/null; echo $?", option = "check_return")
+    stdout, stderr = pdsh(user, [node], "/usr/bin/timeout 3 ceph -s 2>/dev/null 1>/dev/null; echo $?", option = "check_return")
     res = format_pdsh_return(stdout)
     ceph_is_up = False
     if node in res:
@@ -481,7 +481,7 @@ def eval_args( obj, function_name, args ):
 def get_ceph_health(user, node):
     check_count = 0
     output = {}
-    stdout, stderr = pdsh(user, [node], "timeout 3 ceph -s", option = "check_return")
+    stdout, stderr = pdsh(user, [node], "/usr/bin/timeout 3 ceph -s", option = "check_return")
     res = format_pdsh_return(stdout)
     if len(res):
         stdout = res[node]
@@ -496,16 +496,16 @@ def get_ceph_health(user, node):
     return output
 
 def try_ssh( node ):
-    stdout = bash("timeout 5 ssh %s hostname > /dev/null; echo $?" % node)
+    stdout = bash("/usr/bin/timeout 5 ssh -p57891 %s hostname > /dev/null; echo $?" % node)
     if stdout.strip() == "0":
         return True
     else:
         return False
 
 def try_disk( node, disk ):
-    stdout = bash("timeout 5 ssh %s 'df %s > /dev/null'; echo $?" % (node, disk))
+    stdout = bash("/usr/bin/timeout 5 ssh -p57891 %s 'df %s > /dev/null'; echo $?" % (node, disk))
     if stdout.strip() == "0":
-        stdout = bash("ssh %s mount -l | grep boot | awk '{print $1}'" % node)
+        stdout = bash("ssh -p57891 %s mount -l | grep boot | awk '{print $1}'" % node)
         if disk == stdout.strip():
             return False
         return True
