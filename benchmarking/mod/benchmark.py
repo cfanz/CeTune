@@ -24,7 +24,7 @@ class Benchmark(object):
         self.set_runid()
 
         self.benchmark = self.parse_benchmark_cases(testcase)
-        if not self.generate_benchmark_cases(self.benchmark):
+        if not self.generate_benchmark_cases():
             common.printout("ERROR", "Failed to generate Fio/cosbench configuration file.")
             sys.exit()
         self.benchmark["tuning_section"] = tuning
