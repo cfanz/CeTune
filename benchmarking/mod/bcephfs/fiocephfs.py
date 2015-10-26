@@ -42,7 +42,7 @@ class FioCephFS(Benchmark):
         nodes = self.benchmark["distribution"].keys()
         for client in self.benchmark["distribution"]:
 	    max_instance_num = self.benchmark["distribution"][client][-1]
-            res = common.pdsh(user, [client], "for job_num in `seq 1 %d`; do %s/fio --output %s/`hostname`_${job_num}_fio.txt --write_bw_log=%s/`hostname`_${job_num}_fio --write_lat_log=%s/`hostname`_${job_num}_fio --write_iops_log=%s/`hostname`_${job_num}_fio  --filename=`hostname`.${job_num} %s/fio.conf 2>%s/`hostname`_${job_num}_fio_errorlog.txt & done" % (max_instance_num, fio_dir, dest_dir, dest_dir, dest_dir, dest_dir, dest_dir, dest_dir, ), option = "force")         
+            res = common.pdsh(user, [client], "for job_num in `seq 1 %d`; do %s/fio --output %s/`hostname`_${job_num}_fio.txt --write_bw_log=%s/`hostname`_${job_num}_fio --write_lat_log=%s/`hostname`_${job_num}_fio --write_iops_log=%s/`hostname`_${job_num}_fio  %s/fio.conf 2>%s/`hostname`_${job_num}_fio_errorlog.txt & done" % (max_instance_num, fio_dir, dest_dir, dest_dir, dest_dir, dest_dir, dest_dir, dest_dir, ), option = "force")         
             time.sleep(1)
             res = common.pdsh(user, [client], "pgrep fio", option = "check_return")
             if res and not len(res[0].split('\n')) >= len(self.benchmark["distribution"][client]):
