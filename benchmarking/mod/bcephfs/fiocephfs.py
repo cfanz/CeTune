@@ -130,7 +130,7 @@ class FioCephFS(Benchmark):
             fio_template.append("    ramp_time=%s" % warmup_time)
             fio_template.append("    runtime=%s" % runtime)
             fio_template.append("    size=%s" % record_size)
-            fio_template.append("    ioengine=cephfs")
+            #fio_template.append("    ioengine=cephfs")
             fio_template.append("    thread")
             fio_template.append("    size=%s" % fio_total_size)
             if io_pattern in ["randread", "randwrite", "randrw"]:
