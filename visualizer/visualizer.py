@@ -78,8 +78,8 @@ class Visualizer:
         common.printout("LOG","History view generated, copy to remote")
         with open("%s/cetune_history.html" % self.path, 'w') as f:
             f.write(output)
-        common.bash("scp -r %s/cetune_history.html %s" % (self.path, self.dest_dir_remote_bak))
-        common.bash("scp -r ../visualizer/include %s" % (self.dest_dir_remote_bak))
+        common.bash("scp -P57891 -r %s/cetune_history.html %s" % (self.path, self.dest_dir_remote_bak))
+        common.bash("scp -P57891 -r ../visualizer/include %s" % (self.dest_dir_remote_bak))
 
     def generate_history_view(self, remote_host="127.0.0.1", remote_dir="/mnt/data/", user='root', html_format=True):
         common.printout("LOG","Generating history view")
