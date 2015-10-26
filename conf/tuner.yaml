@@ -1,0 +1,19 @@
+{
+    "testjob1": {
+        "global": {
+            "mon_pg_warn_max_per_osd": 1000
+        }, 
+        "analyzer": "all", 
+        "version": "hammer", 
+        "disk": {
+            "read_ahead_kb": 2048
+        }, 
+        "workstages": "benchmark", 
+        "pool": {
+            "rbd": {
+                "pg_num": 1024, 
+                "size": 2
+            }
+        }
+    }
+}
